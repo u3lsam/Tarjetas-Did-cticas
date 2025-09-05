@@ -148,11 +148,16 @@
                     <div id="card-inner" class="card-inner">
                         <div class="card-front">
                             <p id="front-content" class="text-3xl md:text-4xl font-bold text-slate-700 px-12"></p>
-                            <button id="speakBtn" class="absolute bottom-4 right-4 p-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors hidden shadow-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                </svg>
-                            </button>
+                            <div id="speakBtnContainer" class="absolute bottom-4 right-4 flex gap-2 hidden">
+                                <button id="speakSlowBtn" class="p-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors shadow-md" title="Escuchar Lento">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M2 18a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v0a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z"></path><path d="M18 13V8c0-2.5-2-4-4-4-1 0-2 .5-2.5 1"></path><path d="M11.5 13H6"></path><path d="M10 2v2"></path><path d="M6 2v2"></path></svg>
+                                </button>
+                                <button id="speakNativeBtn" class="p-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors shadow-md" title="Escuchar Nativo">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="card-back">
                             <p id="back-content" class="text-3xl md:text-4xl font-bold"></p>
@@ -251,7 +256,6 @@
             const frontContent = document.getElementById('front-content');
             const backContent = document.getElementById('back-content');
             const flipBtn = document.getElementById('flipBtn');
-            const speakBtn = document.getElementById('speakBtn');
             const cardViewer = document.getElementById('card-viewer');
             const emptyState = document.getElementById('empty-state');
             const exportBtn = document.getElementById('exportBtn');
@@ -276,6 +280,9 @@
             const hardBtn = document.getElementById('hardBtn');
             const goodBtn = document.getElementById('goodBtn');
             const easyBtn = document.getElementById('easyBtn');
+            const speakBtnContainer = document.getElementById('speakBtnContainer');
+            const speakSlowBtn = document.getElementById('speakSlowBtn');
+            const speakNativeBtn = document.getElementById('speakNativeBtn');
 
             let decks = [];
             let currentDeckIndex = -1;
@@ -336,7 +343,7 @@
                     emptyState.classList.add('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
-                    speakBtn.classList.add('hidden');
+                    speakBtnContainer.classList.add('hidden');
                     return;
                 }
 
@@ -350,14 +357,14 @@
                     emptyState.classList.remove('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
-                    speakBtn.classList.add('hidden');
+                    speakBtnContainer.classList.add('hidden');
                     cardCounter.textContent = isReviewingIncorrect ? '' : '0 / 0';
                 } else {
                     cardViewer.classList.remove('hidden');
                     emptyState.classList.add('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.remove('hidden');
-                    speakBtn.classList.remove('hidden');
+                    speakBtnContainer.classList.remove('hidden');
                     
                     const card = cardSource[currentCardIndex];
                     frontContent.textContent = card.front;
@@ -374,19 +381,26 @@
                 }
             };
 
-            const speakText = (text) => {
+            const speakText = (text, rate = 1.0) => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance(text);
-                    const englishVoice = voices.find(voice => voice.lang === 'en-US' || voice.lang.startsWith('en-'));
                     
-                    if (englishVoice) {
-                        utterance.voice = englishVoice;
+                    let selectedVoice = voices.find(voice => voice.name === 'Google US English');
+                    if (!selectedVoice) {
+                        selectedVoice = voices.find(voice => voice.lang === 'en-US');
+                    }
+                    if (!selectedVoice) {
+                        selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
+                    }
+                    
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
                     } else {
                         utterance.lang = 'en-US';
                     }
                     
-                    utterance.rate = 0.9;
+                    utterance.rate = rate;
                     window.speechSynthesis.speak(utterance);
                 } else {
                     showNotification('Tu navegador no soporta la síntesis de voz.');
@@ -546,7 +560,7 @@
                 cardViewer.classList.add('hidden');
                 reviewSummary.classList.remove('hidden');
                 gestureHint.classList.add('hidden');
-                speakBtn.classList.add('hidden');
+                speakBtnContainer.classList.add('hidden');
 
                 const totalReviewed = sessionReviewedIndices.size;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
@@ -685,9 +699,14 @@
             startReviewBtn.addEventListener('click', startReview);
             restartDeckBtn.addEventListener('click', restartDeck);
 
-            speakBtn.addEventListener('click', (e) => {
+            speakSlowBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                speakText(frontContent.textContent);
+                speakText(frontContent.textContent, 0.6);
+            });
+
+            speakNativeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                speakText(frontContent.textContent, 1.0);
             });
 
             againBtn.addEventListener('click', () => handleAnswer(false));
@@ -708,3 +727,6 @@
     </script>
 </body>
 </html>
+
+
+
