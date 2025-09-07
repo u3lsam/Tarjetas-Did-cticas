@@ -6,18 +6,19 @@
     <title>Aplicación de Flash Cards</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Este script es el marcador para los datos incrustados al exportar -->
+    <script id="embedded-data" type="application/json"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             overscroll-behavior-y: contain;
-            background-color: #f0f4f8;
+            background-color: #f4f7f9; /* Color de fondo base, muy suave para la vista */
             background-image: 
-                radial-gradient(at 0% 0%, hsla(212,100%,97%,1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(289, 100%, 97%, 1) 0px, transparent 50%);
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+                linear-gradient(rgba(193, 200, 217, 0.4) 1px, transparent 1px),
+                linear-gradient(to right, rgba(193, 200, 217, 0.4) 1px, transparent 1px);
+            background-size: 24px 24px;
         }
         .card {
             perspective: 1500px;
@@ -86,12 +87,26 @@
         ::-webkit-scrollbar-track { background: #e5e7eb; }
         ::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                color: #64748b; /* slate-500 */
+                text-shadow: 0 0 5px rgba(100, 116, 139, 0.2);
+            }
+            50% {
+                color: #4f46e5; /* indigo-600 */
+                text-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+            }
+        }
+        #creator-credit {
+            animation: pulse-glow 5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <div class="fixed top-4 right-4 text-xs text-slate-500 font-semibold z-10">
-        Creado por el ingeniero de prompts u3lsam
+    <div id="creator-credit" class="fixed top-4 right-4 text-xs font-semibold z-10">
+        by: u3lsam
     </div>
 
     <div class="min-h-screen grid md:grid-cols-3 lg:grid-cols-4 gap-8 p-4 md:p-8">
@@ -122,11 +137,7 @@
             <div class="space-y-3 pt-4 border-t border-slate-200/80">
                 <h2 class="text-lg font-semibold text-slate-700">Gestionar Datos</h2>
                 <button id="exportBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 btn-glam">
-                    Exportar Mazos (JSON)
-                </button>
-                <input type="file" id="importInput" class="hidden" accept=".json">
-                <button id="importBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 btn-glam">
-                    Importar Mazos (JSON)
+                    Exportar como Archivo HTML
                 </button>
             </div>
             
@@ -148,7 +159,10 @@
                     <div id="card-inner" class="card-inner">
                         <div class="card-front">
                             <p id="front-content" class="text-3xl md:text-4xl font-bold text-slate-700 px-12"></p>
-                            <div id="speakBtnContainer" class="absolute bottom-4 right-4 flex gap-2 hidden">
+                            <div id="card-actions" class="absolute bottom-4 right-4 flex gap-2 hidden">
+                                <button id="editCardBtn" class="p-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors shadow-md" title="Editar Tarjeta">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
+                                </button>
                                 <button id="speakSlowBtn" class="p-3 rounded-full bg-white/50 hover:bg-white/80 transition-colors shadow-md" title="Escuchar Lento">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M2 18a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v0a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4Z"></path><path d="M18 13V8c0-2.5-2-4-4-4-1 0-2 .5-2.5 1"></path><path d="M11.5 13H6"></path><path d="M10 2v2"></path><path d="M6 2v2"></path></svg>
                                 </button>
@@ -238,6 +252,27 @@
         </main>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">Editar Tarjeta</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="editCardFrontInput" class="block text-sm font-medium text-slate-600 mb-1">Frente de la tarjeta</label>
+                    <textarea id="editCardFrontInput" rows="4" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                </div>
+                <div>
+                    <label for="editCardBackInput" class="block text-sm font-medium text-slate-600 mb-1">Dorso de la tarjeta</label>
+                    <textarea id="editCardBackInput" rows="4" class="w-full p-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancelEditBtn" class="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Cancelar</button>
+                <button id="saveEditBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-bold shadow-md btn-glam">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
     <div id="notification" class="fixed bottom-5 right-5 bg-slate-900 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 translate-y-8 transition-all duration-300 ease-in-out border-t-2 border-cyan-400">
         <p id="notification-message"></p>
     </div>
@@ -259,8 +294,6 @@
             const cardViewer = document.getElementById('card-viewer');
             const emptyState = document.getElementById('empty-state');
             const exportBtn = document.getElementById('exportBtn');
-            const importBtn = document.getElementById('importBtn');
-            const importInput = document.getElementById('importInput');
             const notification = document.getElementById('notification');
             const notificationMessage = document.getElementById('notification-message');
             const navControls = document.getElementById('nav-controls');
@@ -280,9 +313,15 @@
             const hardBtn = document.getElementById('hardBtn');
             const goodBtn = document.getElementById('goodBtn');
             const easyBtn = document.getElementById('easyBtn');
-            const speakBtnContainer = document.getElementById('speakBtnContainer');
+            const cardActions = document.getElementById('card-actions');
             const speakSlowBtn = document.getElementById('speakSlowBtn');
             const speakNativeBtn = document.getElementById('speakNativeBtn');
+            const editCardBtn = document.getElementById('editCardBtn');
+            const editModal = document.getElementById('edit-modal');
+            const editCardFrontInput = document.getElementById('editCardFrontInput');
+            const editCardBackInput = document.getElementById('editCardBackInput');
+            const saveEditBtn = document.getElementById('saveEditBtn');
+            const cancelEditBtn = document.getElementById('cancelEditBtn');
 
             let decks = [];
             let currentDeckIndex = -1;
@@ -296,17 +335,42 @@
             let touchStartX = 0;
             let touchStartY = 0;
             let voices = [];
+            let isLoadedFromExport = false;
+            let editingCardInfo = null;
 
             const saveData = () => {
+                if (isLoadedFromExport) {
+                    return;
+                }
                 localStorage.setItem('flashCardDecks', JSON.stringify(decks));
             };
 
             const loadData = () => {
+                const embeddedDataElement = document.getElementById('embedded-data');
+                
+                if (embeddedDataElement && embeddedDataElement.textContent.trim().length > 2) {
+                    try {
+                        const embeddedDecks = JSON.parse(embeddedDataElement.textContent);
+                        if (Array.isArray(embeddedDecks)) {
+                            decks = embeddedDecks;
+                            if (decks.length > 0) currentDeckIndex = 0;
+                            isLoadedFromExport = true;
+                            showNotification('Mazos cargados desde el archivo exportado.');
+                            return;
+                        }
+                    } catch (e) {
+                        console.error("Error al analizar los datos incrustados.", e);
+                    }
+                }
+                
                 const savedDecks = localStorage.getItem('flashCardDecks');
                 if (savedDecks) {
-                    decks = JSON.parse(savedDecks);
-                    if (decks.length > 0) {
-                        currentDeckIndex = 0;
+                    try {
+                        decks = JSON.parse(savedDecks);
+                        if (decks.length > 0) currentDeckIndex = 0;
+                    } catch (e) {
+                        console.error("Error al analizar datos de localStorage.", e);
+                        decks = [];
                     }
                 }
             };
@@ -343,7 +407,7 @@
                     emptyState.classList.add('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
-                    speakBtnContainer.classList.add('hidden');
+                    cardActions.classList.add('hidden');
                     return;
                 }
 
@@ -357,14 +421,14 @@
                     emptyState.classList.remove('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
-                    speakBtnContainer.classList.add('hidden');
+                    cardActions.classList.add('hidden');
                     cardCounter.textContent = isReviewingIncorrect ? '' : '0 / 0';
                 } else {
                     cardViewer.classList.remove('hidden');
                     emptyState.classList.add('hidden');
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.remove('hidden');
-                    speakBtnContainer.classList.remove('hidden');
+                    cardActions.classList.remove('hidden');
                     
                     const card = cardSource[currentCardIndex];
                     frontContent.textContent = card.front;
@@ -437,6 +501,7 @@
                     decks.push({ name: name, cards: [] });
                     deckNameInput.value = '';
                     currentDeckIndex = decks.length - 1;
+                    isLoadedFromExport = false; 
                     saveData();
                     renderAll();
                     resetSession();
@@ -470,6 +535,7 @@
                     cardBackInput.value = '';
                     currentCardIndex = decks[currentDeckIndex].cards.length - 1;
                     isFlipped = false;
+                    isLoadedFromExport = false; 
                     resetSession();
                     saveData();
                     renderAll();
@@ -481,43 +547,22 @@
                     showNotification('No hay mazos para exportar.');
                     return;
                 }
-                const dataStr = JSON.stringify(decks, null, 2);
-                const dataBlob = new Blob([dataStr], {type: "application/json"});
+                
+                const doc = document.cloneNode(true);
+                const currentData = JSON.stringify(decks);
+                doc.getElementById('embedded-data').textContent = currentData;
+                
+                const finalHtml = `<!DOCTYPE html>\n${doc.documentElement.outerHTML}`;
+
+                const dataBlob = new Blob([finalHtml], { type: "text/html" });
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
-                link.download = 'flashcards-backup.json';
+                const deckName = decks[currentDeckIndex] ? decks[currentDeckIndex].name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'mazos';
+                link.download = `flashcards_${deckName}.html`;
                 link.href = url;
                 link.click();
                 URL.revokeObjectURL(url);
-                showNotification('Mazos exportados correctamente.');
-            };
-
-            const importDecks = (event) => {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const importedDecks = JSON.parse(e.target.result);
-                        if (Array.isArray(importedDecks)) {
-                            decks = importedDecks;
-                            currentDeckIndex = decks.length > 0 ? 0 : -1;
-                            currentCardIndex = 0;
-                            isFlipped = false;
-                            saveData();
-                            renderAll();
-                            resetSession();
-                            showNotification('Mazos importados con éxito.');
-                        } else {
-                            throw new Error('El archivo no tiene el formato correcto.');
-                        }
-                    } catch (error) {
-                        showNotification('Error: El archivo de importación es inválido.');
-                    } finally {
-                        importInput.value = '';
-                    }
-                };
-                reader.readAsText(file);
+                showNotification('Aplicación con mazos exportada como .html');
             };
 
             const handleAnswer = (isCorrect) => {
@@ -560,7 +605,7 @@
                 cardViewer.classList.add('hidden');
                 reviewSummary.classList.remove('hidden');
                 gestureHint.classList.add('hidden');
-                speakBtnContainer.classList.add('hidden');
+                cardActions.classList.add('hidden');
 
                 const totalReviewed = sessionReviewedIndices.size;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
@@ -612,11 +657,59 @@
                     startReviewBtn.classList.add('hidden');
                 }
             };
+            
+            const openEditModal = () => {
+                const cardSource = isReviewingIncorrect ? cardsForReview : decks[currentDeckIndex].cards;
+                const card = cardSource[currentCardIndex];
+                if(!card) return;
+                
+                editingCardInfo = {
+                    deckIndex: currentDeckIndex,
+                    cardIndex: isReviewingIncorrect ? decks[currentDeckIndex].cards.findIndex(c => c.front === card.front) : currentCardIndex,
+                    isReview: isReviewingIncorrect
+                };
+
+                editCardFrontInput.value = card.front;
+                editCardBackInput.value = card.back;
+                editModal.classList.remove('hidden');
+            };
+            
+            const closeEditModal = () => {
+                editModal.classList.add('hidden');
+                editingCardInfo = null;
+            };
+
+            const saveCardChanges = () => {
+                if(!editingCardInfo) return;
+
+                const newFront = editCardFrontInput.value.trim();
+                const newBack = editCardBackInput.value.trim();
+
+                if (newFront && newBack) {
+                    const { deckIndex, cardIndex, isReview } = editingCardInfo;
+                    decks[deckIndex].cards[cardIndex].front = newFront;
+                    decks[deckIndex].cards[cardIndex].back = newBack;
+
+                    if (isReview) {
+                        cardsForReview[currentCardIndex].front = newFront;
+                        cardsForReview[currentCardIndex].back = newBack;
+                    }
+
+                    isLoadedFromExport = false; // Permitir guardar cambios
+                    saveData();
+                    renderCard();
+                    closeEditModal();
+                    showNotification('Tarjeta actualizada con éxito.');
+                } else {
+                    showNotification('Ambos campos deben tener contenido.');
+                }
+            };
+
 
             const startReview = () => {
                 isReviewingIncorrect = true;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
-                cardsForReview = uniqueIncorrectIndices.map(index => decks[currentDeckIndex].cards[index]);
+                cardsForReview = uniqueIncorrectIndices.map(index => ({...decks[currentDeckIndex].cards[index]}));
                 currentCardIndex = 0;
                 isFlipped = false;
                 renderAll();
@@ -694,10 +787,21 @@
             addCardBtn.addEventListener('click', addCard);
             flipBtn.addEventListener('click', flipCard);
             exportBtn.addEventListener('click', exportDecks);
-            importBtn.addEventListener('click', () => importInput.click());
-            importInput.addEventListener('change', importDecks);
             startReviewBtn.addEventListener('click', startReview);
             restartDeckBtn.addEventListener('click', restartDeck);
+
+            editCardBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditModal();
+            });
+            cancelEditBtn.addEventListener('click', closeEditModal);
+            saveEditBtn.addEventListener('click', saveCardChanges);
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal) {
+                    closeEditModal();
+                }
+            });
+
 
             speakSlowBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -727,6 +831,7 @@
     </script>
 </body>
 </html>
+
 
 
 
