@@ -8,21 +8,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Este script es el marcador para los datos incrustados al exportar -->
-    <script id="embedded-data" type="application/json"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             overscroll-behavior-y: contain;
-            background-color: #f4f7f9; /* Color de fondo base, muy suave para la vista */
+            background-color: #f4f7f9;
             background-image: 
                 linear-gradient(rgba(193, 200, 217, 0.4) 1px, transparent 1px),
                 linear-gradient(to right, rgba(193, 200, 217, 0.4) 1px, transparent 1px);
             background-size: 24px 24px;
         }
-        .card {
-            perspective: 1500px;
-        }
+        .card { perspective: 1500px; }
         .card-inner {
             position: relative;
             width: 100%;
@@ -30,9 +27,7 @@
             transition: transform 0.7s;
             transform-style: preserve-3d;
         }
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back {
             position: absolute;
             width: 100%;
@@ -48,23 +43,14 @@
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
-        .card-front {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
+        .card-front { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
         .card-back {
             background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
             transform: rotateY(180deg);
         }
-        #front-content {
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-        }
-        #back-content {
-            color: #1e3a8a;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.3);
-        }
-        .btn-glam {
-            transition: all 0.3s ease;
-        }
+        #front-content { text-shadow: 1px 1px 2px rgba(0,0,0,0.05); }
+        #back-content { color: #1e3a8a; text-shadow: 1px 1px 2px rgba(255,255,255,0.3); }
+        .btn-glam { transition: all 0.3s ease; }
         .btn-glam:hover {
             transform: translateY(-3px) scale(1.02);
             box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.3);
@@ -80,27 +66,22 @@
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in {
-            animation: fadeIn 0.6s ease-out forwards;
-        }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #e5e7eb; }
         ::-webkit-scrollbar-thumb { background: #a5b4fc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #818cf8; }
-
         @keyframes pulse-glow {
             0%, 100% {
-                color: #64748b; /* slate-500 */
+                color: #64748b;
                 text-shadow: 0 0 5px rgba(100, 116, 139, 0.2);
             }
             50% {
-                color: #4f46e5; /* indigo-600 */
+                color: #4f46e5;
                 text-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
             }
         }
-        #creator-credit {
-            animation: pulse-glow 5s ease-in-out infinite;
-        }
+        #creator-credit { animation: pulse-glow 5s ease-in-out infinite; }
     </style>
 </head>
 <body class="text-slate-800">
@@ -120,31 +101,24 @@
             <div class="space-y-3">
                 <h2 class="text-lg font-semibold text-slate-700">Crear Nuevo Mazo</h2>
                 <input type="text" id="deckNameInput" placeholder="Ej: Vocabulary Unit 5" class="w-full p-2 bg-white/80 border border-slate-300 rounded-md focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition">
-                <button id="addDeckBtn" class="w-full text-white font-bold py-2.5 px-4 rounded-lg shadow-md bg-gradient-to-r from-violet-500 to-fuchsia-500 btn-glam">
-                    Añadir Mazo
-                </button>
+                <button id="addDeckBtn" class="w-full text-white font-bold py-2.5 px-4 rounded-lg shadow-md bg-gradient-to-r from-violet-500 to-fuchsia-500 btn-glam">Añadir Mazo</button>
             </div>
 
             <div class="space-y-3">
                 <h2 class="text-lg font-semibold text-slate-700">Añadir Nueva Tarjeta</h2>
                 <textarea id="cardFrontInput" rows="3" placeholder="Palabra en inglés (Ej: 'Apple')" class="w-full p-2 bg-white/80 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
                 <textarea id="cardBackInput" rows="3" placeholder="Traducción o definición (Ej: 'Manzana')" class="w-full p-2 bg-white/80 border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"></textarea>
-                <button id="addCardBtn" class="w-full text-white font-bold py-2.5 px-4 rounded-lg shadow-md bg-gradient-to-r from-sky-500 to-indigo-500 btn-glam">
-                    Añadir Tarjeta
-                </button>
+                <button id="addCardBtn" class="w-full text-white font-bold py-2.5 px-4 rounded-lg shadow-md bg-gradient-to-r from-sky-500 to-indigo-500 btn-glam">Añadir Tarjeta</button>
             </div>
 
             <div class="space-y-3 pt-4 border-t border-slate-200/80">
                 <h2 class="text-lg font-semibold text-slate-700">Gestionar Datos</h2>
-                <button id="exportBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 btn-glam">
-                    Exportar como Archivo HTML
-                </button>
+                <button id="shareDeckBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 btn-glam">Compartir Mazo (Enlace)</button>
             </div>
             
             <div class="flex-grow flex flex-col min-h-0">
                  <h2 class="text-lg font-semibold text-slate-700 mb-3">Mis Mazos</h2>
-                 <div id="deckList" class="flex-grow overflow-y-auto space-y-2 pr-2">
-                 </div>
+                 <div id="deckList" class="flex-grow overflow-y-auto space-y-2 pr-2"></div>
             </div>
         </aside>
 
@@ -196,9 +170,7 @@
                 </div>
             </div>
              <div id="empty-state" class="text-center hidden">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                </svg>
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
                 <h3 class="mt-2 text-sm font-semibold text-gray-900">No hay tarjetas en este mazo</h3>
                 <p class="mt-1 text-sm text-gray-500">Empieza añadiendo una nueva tarjeta en el panel de la izquierda.</p>
             </div>
@@ -207,16 +179,8 @@
                 <div class="grid md:grid-cols-2 gap-8 items-center bg-slate-50 p-6 rounded-xl mb-6">
                     <div class="relative w-48 h-48 mx-auto">
                         <svg class="w-full h-full" viewBox="0 0 36 36" transform="rotate(-90)">
-                            <path class="text-slate-200"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none" stroke="currentColor" stroke-width="3.5" />
-                            <path id="summary-circle" class="text-green-500"
-                                stroke-linecap="round"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none" stroke="currentColor" stroke-width="3.5"
-                                stroke-dasharray="100, 100"
-                                stroke-dashoffset="100"
-                                style="transition: stroke-dashoffset 1s ease-out;" />
+                            <path class="text-slate-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" />
+                            <path id="summary-circle" class="text-green-500" stroke-linecap="round" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5" stroke-dasharray="100, 100" stroke-dashoffset="100" style="transition: stroke-dashoffset 1s ease-out;" />
                         </svg>
                         <div id="summary-percentage" class="absolute inset-0 flex items-center justify-center text-4xl font-bold text-slate-700" style="transform: rotate(90deg);">0%</div>
                     </div>
@@ -239,11 +203,8 @@
                      <h3 class="font-semibold mb-1">Consejo de Estudio</h3>
                      <p id="advice-text" class="text-sm"></p>
                 </div>
-        
                 <h3 class="text-xl font-bold mb-2 text-slate-700 text-left">Tarjetas para Repasar</h3>
-                <div id="incorrect-list" class="text-left mb-6 space-y-2 max-h-48 overflow-y-auto bg-slate-50 p-4 rounded-lg">
-                </div>
-        
+                <div id="incorrect-list" class="text-left mb-6 space-y-2 max-h-48 overflow-y-auto bg-slate-50 p-4 rounded-lg"></div>
                 <div class="flex flex-wrap justify-center gap-4">
                     <button id="start-review-btn" class="px-8 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-bold shadow-md btn-glam">Repasar Incorrectas</button>
                     <button id="restart-deck-btn" class="px-8 py-3 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Volver al Mazo</button>
@@ -252,7 +213,7 @@
         </main>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- Modals -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
             <h2 class="text-2xl font-bold text-slate-800 mb-4">Editar Tarjeta</h2>
@@ -270,6 +231,20 @@
                 <button id="cancelEditBtn" class="px-4 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Cancelar</button>
                 <button id="saveEditBtn" class="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 font-bold shadow-md btn-glam">Guardar Cambios</button>
             </div>
+        </div>
+    </div>
+
+     <div id="share-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4">Comparte tu Mazo</h2>
+            <p class="text-slate-600 mb-4">Copia este enlace y envíalo a quien quieras. Al abrirlo, cargarán este mazo automáticamente.</p>
+            <div class="relative">
+                <input type="text" id="shareLinkInput" readonly class="w-full p-2 pr-12 bg-slate-100 border border-slate-300 rounded-md text-sm text-slate-700">
+                <button id="copyLinkBtn" class="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-md hover:bg-slate-200" title="Copiar enlace">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                </button>
+            </div>
+            <button id="closeShareBtn" class="mt-6 px-6 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Cerrar</button>
         </div>
     </div>
 
@@ -293,7 +268,6 @@
             const flipBtn = document.getElementById('flipBtn');
             const cardViewer = document.getElementById('card-viewer');
             const emptyState = document.getElementById('empty-state');
-            const exportBtn = document.getElementById('exportBtn');
             const notification = document.getElementById('notification');
             const notificationMessage = document.getElementById('notification-message');
             const navControls = document.getElementById('nav-controls');
@@ -317,11 +291,18 @@
             const speakSlowBtn = document.getElementById('speakSlowBtn');
             const speakNativeBtn = document.getElementById('speakNativeBtn');
             const editCardBtn = document.getElementById('editCardBtn');
+            
             const editModal = document.getElementById('edit-modal');
             const editCardFrontInput = document.getElementById('editCardFrontInput');
             const editCardBackInput = document.getElementById('editCardBackInput');
             const saveEditBtn = document.getElementById('saveEditBtn');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
+            
+            const shareDeckBtn = document.getElementById('shareDeckBtn');
+            const shareModal = document.getElementById('share-modal');
+            const shareLinkInput = document.getElementById('shareLinkInput');
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const closeShareBtn = document.getElementById('closeShareBtn');
 
             let decks = [];
             let currentDeckIndex = -1;
@@ -335,43 +316,47 @@
             let touchStartX = 0;
             let touchStartY = 0;
             let voices = [];
-            let isLoadedFromExport = false;
+            let isLoadedFromShare = false;
             let editingCardInfo = null;
 
             const saveData = () => {
-                if (isLoadedFromExport) {
-                    return;
-                }
+                if (isLoadedFromShare) return;
                 localStorage.setItem('flashCardDecks', JSON.stringify(decks));
             };
 
             const loadData = () => {
-                const embeddedDataElement = document.getElementById('embedded-data');
-                
-                if (embeddedDataElement && embeddedDataElement.textContent.trim().length > 2) {
-                    try {
-                        const embeddedDecks = JSON.parse(embeddedDataElement.textContent);
-                        if (Array.isArray(embeddedDecks)) {
-                            decks = embeddedDecks;
-                            if (decks.length > 0) currentDeckIndex = 0;
-                            isLoadedFromExport = true;
-                            showNotification('Mazos cargados desde el archivo exportado.');
-                            return;
+                try {
+                    const hash = window.location.hash;
+                    if (hash && hash.startsWith('#deck=')) {
+                        const encodedData = hash.substring(6);
+                        const compressedData = Uint8Array.from(atob(encodedData.replace(/_/g, '/').replace(/-/g, '+')), c => c.charCodeAt(0));
+                        const jsonString = pako.inflate(compressedData, { to: 'string' });
+                        const sharedDeck = JSON.parse(jsonString);
+
+                        if(sharedDeck && typeof sharedDeck === 'object') {
+                           const existingDeckIndex = decks.findIndex(d => d.name === sharedDeck.name);
+                           if (existingDeckIndex !== -1) {
+                               decks[existingDeckIndex] = sharedDeck;
+                               currentDeckIndex = existingDeckIndex;
+                           } else {
+                               decks.push(sharedDeck);
+                               currentDeckIndex = decks.length - 1;
+                           }
+                           isLoadedFromShare = true;
+                           showNotification(`Mazo "${sharedDeck.name}" cargado desde el enlace.`);
+                           history.pushState("", document.title, window.location.pathname + window.location.search);
+                           return;
                         }
-                    } catch (e) {
-                        console.error("Error al analizar los datos incrustados.", e);
                     }
+                } catch (e) {
+                    console.error("Error al cargar el mazo desde el enlace:", e);
+                    showNotification("No se pudo cargar el mazo desde el enlace.");
                 }
-                
+
                 const savedDecks = localStorage.getItem('flashCardDecks');
                 if (savedDecks) {
-                    try {
-                        decks = JSON.parse(savedDecks);
-                        if (decks.length > 0) currentDeckIndex = 0;
-                    } catch (e) {
-                        console.error("Error al analizar datos de localStorage.", e);
-                        decks = [];
-                    }
+                    decks = JSON.parse(savedDecks);
+                    if (decks.length > 0) currentDeckIndex = 0;
                 }
             };
 
@@ -385,11 +370,9 @@
                     deckList.appendChild(deckElement);
                 });
             };
-
             const renderCard = () => {
                 navControls.classList.remove('hidden');
                 answerControls.classList.add('hidden');
-                
                 if (isFlipped) {
                     cardContainer.classList.add('flipped');
                     navControls.classList.add('hidden');
@@ -397,7 +380,6 @@
                 } else {
                     cardContainer.classList.remove('flipped');
                 }
-
                 if (currentDeckIndex === -1 || decks.length === 0) {
                     currentDeckName.textContent = 'Selecciona o crea un mazo';
                     cardCounter.textContent = '';
@@ -410,12 +392,9 @@
                     cardActions.classList.add('hidden');
                     return;
                 }
-
                 const deck = decks[currentDeckIndex];
                 currentDeckName.textContent = deck.name;
-                
                 const cardSource = isReviewingIncorrect ? cardsForReview : deck.cards;
-
                 if (cardSource.length === 0) {
                     cardViewer.classList.add('hidden');
                     emptyState.classList.remove('hidden');
@@ -429,14 +408,12 @@
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.remove('hidden');
                     cardActions.classList.remove('hidden');
-                    
                     const card = cardSource[currentCardIndex];
                     frontContent.textContent = card.front;
                     backContent.textContent = card.back;
                     cardCounter.textContent = `${currentCardIndex + 1} / ${cardSource.length}`;
                 }
             };
-            
             const populateVoiceList = () => {
                 if (typeof speechSynthesis === 'undefined') return;
                 voices = speechSynthesis.getVoices();
@@ -444,84 +421,63 @@
                     speechSynthesis.addEventListener('voiceschanged', populateVoiceList);
                 }
             };
-
             const speakText = (text, rate = 1.0) => {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
                     const utterance = new SpeechSynthesisUtterance(text);
-                    
                     let selectedVoice = voices.find(voice => voice.name === 'Google US English');
-                    if (!selectedVoice) {
-                        selectedVoice = voices.find(voice => voice.lang === 'en-US');
-                    }
-                    if (!selectedVoice) {
-                        selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
-                    }
-                    
-                    if (selectedVoice) {
-                        utterance.voice = selectedVoice;
-                    } else {
-                        utterance.lang = 'en-US';
-                    }
-                    
+                    if (!selectedVoice) selectedVoice = voices.find(voice => voice.lang === 'en-US');
+                    if (!selectedVoice) selectedVoice = voices.find(voice => voice.lang.startsWith('en-'));
+                    if (selectedVoice) utterance.voice = selectedVoice; else utterance.lang = 'en-US';
                     utterance.rate = rate;
                     window.speechSynthesis.speak(utterance);
                 } else {
                     showNotification('Tu navegador no soporta la síntesis de voz.');
                 }
             };
-
             const shuffleArray = (array) => {
                 for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [array[i], array[j]] = [array[j], array[i]];
                 }
             };
-            
             const showNotification = (message, duration = 3000) => {
                 notificationMessage.textContent = message;
                 notification.classList.remove('opacity-0', 'translate-y-8');
-                
                 clearTimeout(notificationTimeout);
                 notificationTimeout = setTimeout(() => {
                     notification.classList.add('opacity-0', 'translate-y-8');
                 }, duration);
             };
-            
             const resetSession = () => {
                 sessionReviewedIndices.clear();
                 sessionIncorrectIndices = [];
                 isReviewingIncorrect = false;
                 cardsForReview = [];
-            }
-
+            };
             const addDeck = () => {
                 const name = deckNameInput.value.trim();
                 if (name) {
                     decks.push({ name: name, cards: [] });
                     deckNameInput.value = '';
                     currentDeckIndex = decks.length - 1;
-                    isLoadedFromExport = false; 
+                    isLoadedFromShare = false;
                     saveData();
                     renderAll();
                     resetSession();
                 }
             };
-
             const selectDeck = (index) => {
                 if (currentDeckIndex === index) return;
                 currentDeckIndex = index;
-                
                 if (decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
                     shuffleArray(decks[currentDeckIndex].cards);
                 }
-
                 currentCardIndex = 0;
                 isFlipped = false;
                 resetSession();
                 renderAll();
             };
-
             const addCard = () => {
                 if (currentDeckIndex === -1) {
                     showNotification('Por favor, selecciona o crea un mazo primero.');
@@ -535,89 +491,58 @@
                     cardBackInput.value = '';
                     currentCardIndex = decks[currentDeckIndex].cards.length - 1;
                     isFlipped = false;
-                    isLoadedFromExport = false; 
+                    isLoadedFromShare = false;
                     resetSession();
                     saveData();
                     renderAll();
                 }
             };
-
-            const exportDecks = () => {
-                if (decks.length === 0) {
-                    showNotification('No hay mazos para exportar.');
-                    return;
-                }
-                
-                const doc = document.cloneNode(true);
-                const currentData = JSON.stringify(decks);
-                doc.getElementById('embedded-data').textContent = currentData;
-                
-                const finalHtml = `<!DOCTYPE html>\n${doc.documentElement.outerHTML}`;
-
-                const dataBlob = new Blob([finalHtml], { type: "text/html" });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                const deckName = decks[currentDeckIndex] ? decks[currentDeckIndex].name.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'mazos';
-                link.download = `flashcards_${deckName}.html`;
-                link.href = url;
-                link.click();
-                URL.revokeObjectURL(url);
-                showNotification('Aplicación con mazos exportada como .html');
-            };
-
             const handleAnswer = (isCorrect) => {
                 if (isReviewingIncorrect) {
                     if (isCorrect) {
                         cardsForReview.splice(currentCardIndex, 1);
                         if (currentCardIndex >= cardsForReview.length) {
-                             currentCardIndex = Math.max(0, cardsForReview.length - 1);
+                            currentCardIndex = Math.max(0, cardsForReview.length - 1);
                         }
                     }
-                    if(cardsForReview.length === 0) {
+                    if (cardsForReview.length === 0) {
                         showNotification("¡Felicidades! Repasaste todas las tarjetas.");
                         restartDeck();
                     } else {
-                        if(currentCardIndex >= cardsForReview.length) currentCardIndex = 0;
+                        if (currentCardIndex >= cardsForReview.length) currentCardIndex = 0;
                         isFlipped = false;
                         renderCard();
                     }
                     return;
                 }
-                
                 const cardText = frontContent.textContent;
                 const originalCardIndex = decks[currentDeckIndex].cards.findIndex(c => c.front === cardText);
                 if (!isCorrect) {
-                    if(originalCardIndex !== -1) sessionIncorrectIndices.push(originalCardIndex);
+                    if (originalCardIndex !== -1) sessionIncorrectIndices.push(originalCardIndex);
                 }
-                if(originalCardIndex !== -1) sessionReviewedIndices.add(originalCardIndex);
-
+                if (originalCardIndex !== -1) sessionReviewedIndices.add(originalCardIndex);
                 const sessionSize = 10;
                 const deckSize = decks[currentDeckIndex].cards.length;
-
                 if (sessionReviewedIndices.size >= Math.min(sessionSize, deckSize)) {
                     showReviewSummary();
                 } else {
-                    nextCard(); 
+                    nextCard();
                 }
             };
-
             const showReviewSummary = () => {
                 cardViewer.classList.add('hidden');
                 reviewSummary.classList.remove('hidden');
                 gestureHint.classList.add('hidden');
                 cardActions.classList.add('hidden');
-
                 const totalReviewed = sessionReviewedIndices.size;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
                 const totalIncorrect = uniqueIncorrectIndices.length;
                 const totalCorrect = totalReviewed - totalIncorrect;
                 const successRate = totalReviewed > 0 ? Math.max(0, (totalCorrect / totalReviewed) * 100) : 0;
-
                 summaryPercentage.textContent = `${Math.round(successRate)}%`;
                 statRate.textContent = `${Math.round(successRate)}%`;
                 statReviewed.textContent = totalReviewed;
                 statIncorrect.textContent = totalIncorrect;
-
                 setTimeout(() => {
                     summaryCircle.style.strokeDashoffset = 100 - successRate;
                     if (successRate < 50) {
@@ -631,19 +556,12 @@
                         statRate.className = 'text-2xl font-bold text-green-600';
                     }
                 }, 100);
-                
-                 if (successRate >= 95) {
-                    adviceText.textContent = "¡Dominio total! Estás listo para material nuevo o un repaso más espaciado. Sigue así.";
-                } else if (successRate >= 80) {
-                    adviceText.textContent = "¡Excelente trabajo! Has entendido la mayor parte del material. Un repaso rápido a las tarjetas incorrectas te ayudará a alcanzar la perfección.";
-                } else if (successRate >= 50) {
-                    adviceText.textContent = "¡Buen progreso! Estás construyendo una base sólida. Enfócate en repasar las tarjetas que fallaste para afianzar esos conceptos.";
-                } else {
-                    adviceText.textContent = "No te desanimes, ¡la práctica hace al maestro! Considera dividir el mazo en partes más pequeñas y repasa con más frecuencia.";
-                }
-
+                if (successRate >= 95) adviceText.textContent = "¡Dominio total! Estás listo para material nuevo o un repaso más espaciado. Sigue así.";
+                else if (successRate >= 80) adviceText.textContent = "¡Excelente trabajo! Has entendido la mayor parte del material. Un repaso rápido a las tarjetas incorrectas te ayudará a alcanzar la perfección.";
+                else if (successRate >= 50) adviceText.textContent = "¡Buen progreso! Estás construyendo una base sólida. Enfócate en repasar las tarjetas que fallaste para afianzar esos conceptos.";
+                else adviceText.textContent = "No te desanimes, ¡la práctica hace al maestro! Considera dividir el mazo en partes más pequeñas y repasa con más frecuencia.";
                 incorrectList.innerHTML = '';
-                if(totalIncorrect > 0) {
+                if (totalIncorrect > 0) {
                     startReviewBtn.classList.remove('hidden');
                     uniqueIncorrectIndices.forEach(index => {
                         const card = decks[currentDeckIndex].cards[index];
@@ -657,45 +575,36 @@
                     startReviewBtn.classList.add('hidden');
                 }
             };
-            
             const openEditModal = () => {
                 const cardSource = isReviewingIncorrect ? cardsForReview : decks[currentDeckIndex].cards;
                 const card = cardSource[currentCardIndex];
-                if(!card) return;
-                
+                if (!card) return;
                 editingCardInfo = {
                     deckIndex: currentDeckIndex,
                     cardIndex: isReviewingIncorrect ? decks[currentDeckIndex].cards.findIndex(c => c.front === card.front) : currentCardIndex,
                     isReview: isReviewingIncorrect
                 };
-
                 editCardFrontInput.value = card.front;
                 editCardBackInput.value = card.back;
                 editModal.classList.remove('hidden');
             };
-            
             const closeEditModal = () => {
                 editModal.classList.add('hidden');
                 editingCardInfo = null;
             };
-
             const saveCardChanges = () => {
-                if(!editingCardInfo) return;
-
+                if (!editingCardInfo) return;
                 const newFront = editCardFrontInput.value.trim();
                 const newBack = editCardBackInput.value.trim();
-
                 if (newFront && newBack) {
                     const { deckIndex, cardIndex, isReview } = editingCardInfo;
                     decks[deckIndex].cards[cardIndex].front = newFront;
                     decks[deckIndex].cards[cardIndex].back = newBack;
-
                     if (isReview) {
                         cardsForReview[currentCardIndex].front = newFront;
                         cardsForReview[currentCardIndex].back = newBack;
                     }
-
-                    isLoadedFromExport = false; // Permitir guardar cambios
+                    isLoadedFromShare = false;
                     saveData();
                     renderCard();
                     closeEditModal();
@@ -704,17 +613,14 @@
                     showNotification('Ambos campos deben tener contenido.');
                 }
             };
-
-
             const startReview = () => {
                 isReviewingIncorrect = true;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
-                cardsForReview = uniqueIncorrectIndices.map(index => ({...decks[currentDeckIndex].cards[index]}));
+                cardsForReview = uniqueIncorrectIndices.map(index => ({ ...decks[currentDeckIndex].cards[index] }));
                 currentCardIndex = 0;
                 isFlipped = false;
                 renderAll();
             };
-
             const restartDeck = () => {
                 if (decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
                     shuffleArray(decks[currentDeckIndex].cards);
@@ -723,18 +629,15 @@
                 currentCardIndex = 0;
                 isFlipped = false;
                 renderAll();
-            }
-            
+            };
             const flipCard = () => {
                 if (currentDeckIndex === -1 || decks[currentDeckIndex].cards.length === 0) return;
                 isFlipped = !isFlipped;
                 renderCard();
             };
-
             const nextCard = () => {
                 const cardSource = isReviewingIncorrect ? cardsForReview : decks[currentDeckIndex].cards;
                 if (currentDeckIndex === -1 || cardSource.length === 0) return;
-
                 if (currentCardIndex < cardSource.length - 1) {
                     currentCardIndex++;
                 } else {
@@ -743,23 +646,19 @@
                 isFlipped = false;
                 renderCard();
             };
-            
             const handleTouchStart = (e) => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
             };
-
             const handleTouchEnd = (e) => {
                 const touchEndX = e.changedTouches[0].screenX;
                 const touchEndY = e.changedTouches[0].screenY;
                 handleSwipeGesture(touchEndX, touchEndY);
             };
-
             const handleSwipeGesture = (touchEndX, touchEndY) => {
                 const deltaX = touchEndX - touchStartX;
                 const deltaY = touchEndY - touchStartY;
                 const swipeThreshold = 50;
-
                 if (Math.abs(deltaY) > swipeThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
                     if (isFlipped) {
                         if (deltaY < 0) {
@@ -776,61 +675,66 @@
                     }
                 }
             };
-
+            const openShareModal = () => {
+                if(currentDeckIndex === -1 || decks[currentDeckIndex].cards.length === 0) {
+                    showNotification('Selecciona un mazo con tarjetas para compartir.');
+                    return;
+                }
+                const deckToShare = decks[currentDeckIndex];
+                const jsonString = JSON.stringify(deckToShare);
+                const compressed = pako.deflate(jsonString);
+                const encodedData = btoa(String.fromCharCode.apply(null, compressed)).replace(/\+/g, '-').replace(/\//g, '_');
+                const baseUrl = window.location.href.split('#')[0];
+                shareLinkInput.value = `${baseUrl}#deck=${encodedData}`;
+                shareModal.classList.remove('hidden');
+            };
+            const closeShareModal = () => {
+                shareModal.classList.add('hidden');
+            };
+            const copyShareLink = () => {
+                shareLinkInput.select();
+                document.execCommand('copy');
+                showNotification('¡Enlace copiado al portapapeles!');
+            };
             const renderAll = () => {
                 renderDecks();
                 renderCard();
             };
-
             addDeckBtn.addEventListener('click', addDeck);
             deckNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addDeck(); });
             addCardBtn.addEventListener('click', addCard);
             flipBtn.addEventListener('click', flipCard);
-            exportBtn.addEventListener('click', exportDecks);
             startReviewBtn.addEventListener('click', startReview);
             restartDeckBtn.addEventListener('click', restartDeck);
-
-            editCardBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openEditModal();
-            });
+            editCardBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(); });
             cancelEditBtn.addEventListener('click', closeEditModal);
             saveEditBtn.addEventListener('click', saveCardChanges);
-            editModal.addEventListener('click', (e) => {
-                if (e.target === editModal) {
-                    closeEditModal();
-                }
-            });
-
-
-            speakSlowBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                speakText(frontContent.textContent, 0.6);
-            });
-
-            speakNativeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                speakText(frontContent.textContent, 1.0);
-            });
-
+            editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEditModal(); });
+            shareDeckBtn.addEventListener('click', openShareModal);
+            closeShareBtn.addEventListener('click', closeShareModal);
+            copyLinkBtn.addEventListener('click', copyShareLink);
+            shareModal.addEventListener('click', (e) => { if (e.target === shareModal) closeShareModal(); });
+            speakSlowBtn.addEventListener('click', (e) => { e.stopPropagation(); speakText(frontContent.textContent, 0.6); });
+            speakNativeBtn.addEventListener('click', (e) => { e.stopPropagation(); speakText(frontContent.textContent, 1.0); });
             againBtn.addEventListener('click', () => handleAnswer(false));
             hardBtn.addEventListener('click', () => handleAnswer(false));
             goodBtn.addEventListener('click', () => handleAnswer(true));
             easyBtn.addEventListener('click', () => handleAnswer(true));
-
             cardContainer.addEventListener('touchstart', handleTouchStart, false);
             cardContainer.addEventListener('touchend', handleTouchEnd, false);
-
-            populateVoiceList();
+            
             loadData();
+            populateVoiceList();
             if (currentDeckIndex !== -1 && decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
-                 shuffleArray(decks[currentDeckIndex].cards);
+                shuffleArray(decks[currentDeckIndex].cards);
             }
             renderAll();
         });
     </script>
 </body>
 </html>
+
+
 
 
 
