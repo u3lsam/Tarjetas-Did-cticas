@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -82,6 +83,12 @@
             }
         }
         #creator-credit { animation: pulse-glow 5s ease-in-out infinite; }
+        #qrcode-container img {
+            margin: auto;
+            border-radius: 8px;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body class="text-slate-800">
@@ -113,7 +120,12 @@
 
             <div class="space-y-3 pt-4 border-t border-slate-200/80">
                 <h2 class="text-lg font-semibold text-slate-700">Gestionar Datos</h2>
-                <button id="shareDeckBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 btn-glam">Compartir Mazo (Enlace)</button>
+                <div class="space-y-2">
+                    <button id="shareDeckBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-emerald-500 to-teal-500 btn-glam">Compartir Mazo (Enlace)</button>
+                    <button id="exportJsonBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-sky-500 to-cyan-500 btn-glam">Exportar Backup (JSON)</button>
+                    <input type="file" id="importJsonInput" class="hidden" accept=".json">
+                    <button id="importJsonBtn" class="w-full text-white font-bold py-2 px-4 rounded-lg shadow-sm bg-gradient-to-r from-amber-500 to-orange-500 btn-glam">Importar Backup (JSON)</button>
+                </div>
             </div>
             
             <div class="flex-grow flex flex-col min-h-0">
@@ -127,6 +139,11 @@
                 <div id="viewer-header" class="mb-4 text-center">
                     <h2 id="currentDeckName" class="text-3xl font-bold">Selecciona o crea un mazo</h2>
                     <p id="cardCounter" class="text-slate-500 font-medium"></p>
+                </div>
+                
+                 <div id="quiz-controls" class="mb-4 h-10">
+                    <button id="startQuizBtn" class="px-6 py-2 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-lg font-bold shadow-md btn-glam">Iniciar Prueba</button>
+                    <button id="finishQuizBtn" class="px-6 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-lg font-bold shadow-md btn-glam hidden">Finalizar Prueba</button>
                 </div>
 
                 <div id="card-container" class="card w-full h-80 mb-6 touch-none">
@@ -155,7 +172,12 @@
 
                 <div class="w-full max-w-lg">
                     <div id="nav-controls" class="flex items-center justify-center gap-4 h-14">
-                        <button id="flipBtn" class="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-bold text-lg shadow-lg btn-glam">Voltear</button>
+                        <div id="study-nav" class="flex w-full items-center justify-center gap-4">
+                             <button id="prevBtn" class="px-6 py-3 bg-white rounded-lg shadow-md btn-glam">Anterior</button>
+                             <button id="flipBtnStudy" class="flex-grow px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold text-lg shadow-lg btn-glam">Voltear</button>
+                             <button id="nextBtn" class="px-6 py-3 bg-white rounded-lg shadow-md btn-glam">Siguiente</button>
+                        </div>
+                        <button id="flipBtnQuiz" class="w-full px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-colors font-bold text-lg shadow-lg btn-glam hidden">Voltear</button>
                     </div>
                      <div id="answer-controls" class="flex flex-wrap justify-center items-center gap-3 hidden">
                         <button id="againBtn" class="flex-grow px-4 py-3 bg-rose-500 text-white rounded-lg hover:bg-rose-600 font-semibold shadow-md btn-glam">Otra vez</button>
@@ -235,16 +257,24 @@
     </div>
 
      <div id="share-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg text-center">
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">Comparte tu Mazo</h2>
-            <p class="text-slate-600 mb-4">Copia este enlace y envíalo a quien quieras. Al abrirlo, cargarán este mazo automáticamente.</p>
-            <div class="relative">
-                <input type="text" id="shareLinkInput" readonly class="w-full p-2 pr-12 bg-slate-100 border border-slate-300 rounded-md text-sm text-slate-700">
-                <button id="copyLinkBtn" class="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-md hover:bg-slate-200" title="Copiar enlace">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                </button>
+        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 text-center">Comparte tu Mazo</h2>
+            <div class="grid md:grid-cols-2 gap-6 items-center">
+                <div class="text-center md:text-left">
+                    <p class="text-slate-600 mb-2">Opción 1: Copia y pega este enlace.</p>
+                    <div class="relative">
+                        <input type="text" id="shareLinkInput" readonly class="w-full p-2 pr-12 bg-slate-100 border border-slate-300 rounded-md text-sm text-slate-700">
+                        <button id="copyLinkBtn" class="absolute top-1/2 right-2 -translate-y-1/2 p-2 rounded-md hover:bg-slate-200" title="Copiar enlace">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-slate-600"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-center">
+                     <p class="text-slate-600 mb-2">Opción 2: Escanea este código QR.</p>
+                     <div id="qrcode-container" class="p-2 bg-white rounded-lg inline-block"></div>
+                </div>
             </div>
-            <button id="closeShareBtn" class="mt-6 px-6 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Cerrar</button>
+            <button id="closeShareBtn" class="mt-8 px-6 py-2 bg-slate-200 rounded-lg hover:bg-slate-300 font-semibold shadow-sm btn-glam">Cerrar</button>
         </div>
     </div>
 
@@ -265,7 +295,6 @@
             const cardContainer = document.getElementById('card-container');
             const frontContent = document.getElementById('front-content');
             const backContent = document.getElementById('back-content');
-            const flipBtn = document.getElementById('flipBtn');
             const cardViewer = document.getElementById('card-viewer');
             const emptyState = document.getElementById('empty-state');
             const notification = document.getElementById('notification');
@@ -291,19 +320,29 @@
             const speakSlowBtn = document.getElementById('speakSlowBtn');
             const speakNativeBtn = document.getElementById('speakNativeBtn');
             const editCardBtn = document.getElementById('editCardBtn');
-            
             const editModal = document.getElementById('edit-modal');
             const editCardFrontInput = document.getElementById('editCardFrontInput');
             const editCardBackInput = document.getElementById('editCardBackInput');
             const saveEditBtn = document.getElementById('saveEditBtn');
             const cancelEditBtn = document.getElementById('cancelEditBtn');
-            
             const shareDeckBtn = document.getElementById('shareDeckBtn');
             const shareModal = document.getElementById('share-modal');
             const shareLinkInput = document.getElementById('shareLinkInput');
             const copyLinkBtn = document.getElementById('copyLinkBtn');
             const closeShareBtn = document.getElementById('closeShareBtn');
+            const qrCodeContainer = document.getElementById('qrcode-container');
+            const exportJsonBtn = document.getElementById('exportJsonBtn');
+            const importJsonBtn = document.getElementById('importJsonBtn');
+            const importJsonInput = document.getElementById('importJsonInput');
 
+            const startQuizBtn = document.getElementById('startQuizBtn');
+            const finishQuizBtn = document.getElementById('finishQuizBtn');
+            const studyNav = document.getElementById('study-nav');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const flipBtnStudy = document.getElementById('flipBtnStudy');
+            const flipBtnQuiz = document.getElementById('flipBtnQuiz');
+            
             let decks = [];
             let currentDeckIndex = -1;
             let currentCardIndex = 0;
@@ -318,12 +357,12 @@
             let voices = [];
             let isLoadedFromShare = false;
             let editingCardInfo = null;
+            let isQuizMode = false;
 
             const saveData = () => {
                 if (isLoadedFromShare) return;
                 localStorage.setItem('flashCardDecks', JSON.stringify(decks));
             };
-
             const loadData = () => {
                 try {
                     const hash = window.location.hash;
@@ -332,7 +371,6 @@
                         const compressedData = Uint8Array.from(atob(encodedData.replace(/_/g, '/').replace(/-/g, '+')), c => c.charCodeAt(0));
                         const jsonString = pako.inflate(compressedData, { to: 'string' });
                         const sharedDeck = JSON.parse(jsonString);
-
                         if(sharedDeck && typeof sharedDeck === 'object') {
                            const existingDeckIndex = decks.findIndex(d => d.name === sharedDeck.name);
                            if (existingDeckIndex !== -1) {
@@ -352,14 +390,12 @@
                     console.error("Error al cargar el mazo desde el enlace:", e);
                     showNotification("No se pudo cargar el mazo desde el enlace.");
                 }
-
                 const savedDecks = localStorage.getItem('flashCardDecks');
                 if (savedDecks) {
                     decks = JSON.parse(savedDecks);
                     if (decks.length > 0) currentDeckIndex = 0;
                 }
             };
-
             const renderDecks = () => {
                 deckList.innerHTML = '';
                 decks.forEach((deck, index) => {
@@ -371,12 +407,26 @@
                 });
             };
             const renderCard = () => {
-                navControls.classList.remove('hidden');
                 answerControls.classList.add('hidden');
+                
+                if(isQuizMode) {
+                    startQuizBtn.classList.add('hidden');
+                    finishQuizBtn.classList.remove('hidden');
+                    studyNav.classList.add('hidden');
+                    flipBtnQuiz.classList.remove('hidden');
+                    if(isFlipped) {
+                        flipBtnQuiz.classList.add('hidden');
+                        answerControls.classList.remove('hidden');
+                    }
+                } else {
+                    startQuizBtn.classList.remove('hidden');
+                    finishQuizBtn.classList.add('hidden');
+                    studyNav.classList.remove('hidden');
+                    flipBtnQuiz.classList.add('hidden');
+                }
+
                 if (isFlipped) {
                     cardContainer.classList.add('flipped');
-                    navControls.classList.add('hidden');
-                    answerControls.classList.remove('hidden');
                 } else {
                     cardContainer.classList.remove('flipped');
                 }
@@ -390,6 +440,7 @@
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
                     cardActions.classList.add('hidden');
+                    startQuizBtn.classList.add('hidden');
                     return;
                 }
                 const deck = decks[currentDeckIndex];
@@ -401,6 +452,7 @@
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.add('hidden');
                     cardActions.classList.add('hidden');
+                    startQuizBtn.classList.add('hidden');
                     cardCounter.textContent = isReviewingIncorrect ? '' : '0 / 0';
                 } else {
                     cardViewer.classList.remove('hidden');
@@ -408,6 +460,7 @@
                     reviewSummary.classList.add('hidden');
                     gestureHint.classList.remove('hidden');
                     cardActions.classList.remove('hidden');
+                    startQuizBtn.classList.remove('hidden');
                     const card = cardSource[currentCardIndex];
                     frontContent.textContent = card.front;
                     backContent.textContent = card.back;
@@ -462,6 +515,7 @@
                     deckNameInput.value = '';
                     currentDeckIndex = decks.length - 1;
                     isLoadedFromShare = false;
+                    isQuizMode = false;
                     saveData();
                     renderAll();
                     resetSession();
@@ -470,11 +524,9 @@
             const selectDeck = (index) => {
                 if (currentDeckIndex === index) return;
                 currentDeckIndex = index;
-                if (decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
-                    shuffleArray(decks[currentDeckIndex].cards);
-                }
                 currentCardIndex = 0;
                 isFlipped = false;
+                isQuizMode = false;
                 resetSession();
                 renderAll();
             };
@@ -492,12 +544,60 @@
                     currentCardIndex = decks[currentDeckIndex].cards.length - 1;
                     isFlipped = false;
                     isLoadedFromShare = false;
+                    isQuizMode = false;
                     resetSession();
                     saveData();
                     renderAll();
                 }
             };
+            const exportDecksAsJson = () => {
+                if (decks.length === 0) {
+                    showNotification('No hay mazos para exportar.');
+                    return;
+                }
+                const dataStr = JSON.stringify(decks, null, 2);
+                const dataBlob = new Blob([dataStr], {type: "application/json"});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.download = 'flashcards-backup.json';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                showNotification('Backup JSON exportado correctamente.');
+            };
+            const importDecksFromJson = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedDecks = JSON.parse(e.target.result);
+                        if (Array.isArray(importedDecks)) {
+                            decks = importedDecks;
+                            currentDeckIndex = decks.length > 0 ? 0 : -1;
+                            currentCardIndex = 0;
+                            isFlipped = false;
+                            isLoadedFromShare = false;
+                            isQuizMode = false;
+                            saveData();
+                            renderAll();
+                            resetSession();
+                            showNotification('Backup importado con éxito. Tus mazos han sido reemplazados.');
+                        } else {
+                            throw new Error('El archivo no tiene el formato correcto.');
+                        }
+                    } catch (error) {
+                        showNotification('Error: El archivo de importación es inválido.');
+                    } finally {
+                        importJsonInput.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            };
             const handleAnswer = (isCorrect) => {
+                if (currentDeckIndex === -1 || !decks[currentDeckIndex]) return;
+                if (!isQuizMode && !isReviewingIncorrect) return;
+
                 if (isReviewingIncorrect) {
                     if (isCorrect) {
                         cardsForReview.splice(currentCardIndex, 1);
@@ -521,30 +621,41 @@
                     if (originalCardIndex !== -1) sessionIncorrectIndices.push(originalCardIndex);
                 }
                 if (originalCardIndex !== -1) sessionReviewedIndices.add(originalCardIndex);
-                const sessionSize = 10;
-                const deckSize = decks[currentDeckIndex].cards.length;
-                if (sessionReviewedIndices.size >= Math.min(sessionSize, deckSize)) {
-                    showReviewSummary();
+                
+                const cardSource = decks[currentDeckIndex].cards;
+                 if (currentCardIndex < cardSource.length - 1) {
+                    currentCardIndex++;
                 } else {
-                    nextCard();
+                    currentCardIndex = 0;
                 }
+                isFlipped = false;
+                renderCard();
             };
             const showReviewSummary = () => {
                 cardViewer.classList.add('hidden');
                 reviewSummary.classList.remove('hidden');
                 gestureHint.classList.add('hidden');
                 cardActions.classList.add('hidden');
+                startQuizBtn.classList.add('hidden');
+                finishQuizBtn.classList.add('hidden');
                 const totalReviewed = sessionReviewedIndices.size;
                 const uniqueIncorrectIndices = [...new Set(sessionIncorrectIndices)];
                 const totalIncorrect = uniqueIncorrectIndices.length;
                 const totalCorrect = totalReviewed - totalIncorrect;
-                const successRate = totalReviewed > 0 ? Math.max(0, (totalCorrect / totalReviewed) * 100) : 0;
-                summaryPercentage.textContent = `${Math.round(successRate)}%`;
-                statRate.textContent = `${Math.round(successRate)}%`;
+                const successRate = totalReviewed > 0 ? Math.round((totalCorrect / totalReviewed) * 100) : 100;
+                
+                if (totalReviewed === 0) {
+                     statRate.textContent = 'N/A';
+                     summaryPercentage.textContent = 'N/A';
+                } else {
+                    statRate.textContent = `${successRate}%`;
+                    summaryPercentage.textContent = `${successRate}%`;
+                }
+
                 statReviewed.textContent = totalReviewed;
                 statIncorrect.textContent = totalIncorrect;
                 setTimeout(() => {
-                    summaryCircle.style.strokeDashoffset = 100 - successRate;
+                    summaryCircle.style.strokeDashoffset = totalReviewed === 0 ? 100 : 100 - successRate;
                     if (successRate < 50) {
                         summaryCircle.className.baseVal = 'text-red-500';
                         statRate.className = 'text-2xl font-bold text-red-600';
@@ -556,7 +667,10 @@
                         statRate.className = 'text-2xl font-bold text-green-600';
                     }
                 }, 100);
-                if (successRate >= 95) adviceText.textContent = "¡Dominio total! Estás listo para material nuevo o un repaso más espaciado. Sigue así.";
+                if (totalReviewed === 0) {
+                    adviceText.textContent = "No has revisado ninguna tarjeta en esta sesión. ¡Inicia una prueba para ver tu progreso!";
+                }
+                else if (successRate >= 95) adviceText.textContent = "¡Dominio total! Estás listo para material nuevo o un repaso más espaciado. Sigue así.";
                 else if (successRate >= 80) adviceText.textContent = "¡Excelente trabajo! Has entendido la mayor parte del material. Un repaso rápido a las tarjetas incorrectas te ayudará a alcanzar la perfección.";
                 else if (successRate >= 50) adviceText.textContent = "¡Buen progreso! Estás construyendo una base sólida. Enfócate en repasar las tarjetas que fallaste para afianzar esos conceptos.";
                 else adviceText.textContent = "No te desanimes, ¡la práctica hace al maestro! Considera dividir el mazo en partes más pequeñas y repasa con más frecuencia.";
@@ -622,9 +736,7 @@
                 renderAll();
             };
             const restartDeck = () => {
-                if (decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
-                    shuffleArray(decks[currentDeckIndex].cards);
-                }
+                isQuizMode = false;
                 resetSession();
                 currentCardIndex = 0;
                 isFlipped = false;
@@ -636,8 +748,9 @@
                 renderCard();
             };
             const nextCard = () => {
+                if (currentDeckIndex === -1 || !decks[currentDeckIndex]) return;
                 const cardSource = isReviewingIncorrect ? cardsForReview : decks[currentDeckIndex].cards;
-                if (currentDeckIndex === -1 || cardSource.length === 0) return;
+                if (cardSource.length === 0) return;
                 if (currentCardIndex < cardSource.length - 1) {
                     currentCardIndex++;
                 } else {
@@ -646,6 +759,19 @@
                 isFlipped = false;
                 renderCard();
             };
+            const prevCard = () => {
+                if (currentDeckIndex === -1 || !decks[currentDeckIndex]) return;
+                const cardSource = isReviewingIncorrect ? cardsForReview : decks[currentDeckIndex].cards;
+                if (cardSource.length === 0) return;
+                if (currentCardIndex > 0) {
+                    currentCardIndex--;
+                } else {
+                    currentCardIndex = cardSource.length - 1;
+                }
+                isFlipped = false;
+                renderCard();
+            };
+
             const handleTouchStart = (e) => {
                 touchStartX = e.changedTouches[0].screenX;
                 touchStartY = e.changedTouches[0].screenY;
@@ -659,7 +785,7 @@
                 const deltaX = touchEndX - touchStartX;
                 const deltaY = touchEndY - touchStartY;
                 const swipeThreshold = 50;
-                if (Math.abs(deltaY) > swipeThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
+                if (isQuizMode && Math.abs(deltaY) > swipeThreshold && Math.abs(deltaY) > Math.abs(deltaX)) {
                     if (isFlipped) {
                         if (deltaY < 0) {
                             handleAnswer(true);
@@ -670,7 +796,7 @@
                         }
                     }
                 } else if (Math.abs(deltaX) > swipeThreshold) {
-                    if (!isFlipped) {
+                     if (!isFlipped) {
                         flipCard();
                     }
                 }
@@ -685,7 +811,18 @@
                 const compressed = pako.deflate(jsonString);
                 const encodedData = btoa(String.fromCharCode.apply(null, compressed)).replace(/\+/g, '-').replace(/\//g, '_');
                 const baseUrl = window.location.href.split('#')[0];
-                shareLinkInput.value = `${baseUrl}#deck=${encodedData}`;
+                const link = `${baseUrl}#deck=${encodedData}`;
+                shareLinkInput.value = link;
+                qrCodeContainer.innerHTML = '';
+                try {
+                    const qr = qrcode(0, 'L');
+                    qr.addData(link);
+                    qr.make();
+                    qrCodeContainer.innerHTML = qr.createImgTag(4, 8);
+                } catch(e) {
+                    console.error("Error creating QR Code", e);
+                    qrCodeContainer.textContent = "No se pudo generar el QR.";
+                }
                 shareModal.classList.remove('hidden');
             };
             const closeShareModal = () => {
@@ -703,7 +840,6 @@
             addDeckBtn.addEventListener('click', addDeck);
             deckNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addDeck(); });
             addCardBtn.addEventListener('click', addCard);
-            flipBtn.addEventListener('click', flipCard);
             startReviewBtn.addEventListener('click', startReview);
             restartDeckBtn.addEventListener('click', restartDeck);
             editCardBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditModal(); });
@@ -722,7 +858,30 @@
             easyBtn.addEventListener('click', () => handleAnswer(true));
             cardContainer.addEventListener('touchstart', handleTouchStart, false);
             cardContainer.addEventListener('touchend', handleTouchEnd, false);
+            exportJsonBtn.addEventListener('click', exportDecksAsJson);
+            importJsonBtn.addEventListener('click', () => importJsonInput.click());
+            importJsonInput.addEventListener('change', importDecksFromJson);
             
+            startQuizBtn.addEventListener('click', () => {
+                isQuizMode = true;
+                resetSession();
+                if (decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
+                    shuffleArray(decks[currentDeckIndex].cards);
+                }
+                currentCardIndex = 0;
+                isFlipped = false;
+                renderCard();
+            });
+            finishQuizBtn.addEventListener('click', () => {
+                isQuizMode = false;
+                showReviewSummary();
+            });
+            
+            prevBtn.addEventListener('click', prevCard);
+            nextBtn.addEventListener('click', nextCard);
+            flipBtnStudy.addEventListener('click', flipCard);
+            flipBtnQuiz.addEventListener('click', flipCard);
+
             loadData();
             populateVoiceList();
             if (currentDeckIndex !== -1 && decks[currentDeckIndex] && decks[currentDeckIndex].cards.length > 0) {
@@ -733,6 +892,9 @@
     </script>
 </body>
 </html>
+
+
+
 
 
 
